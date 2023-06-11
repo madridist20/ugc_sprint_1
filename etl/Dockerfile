@@ -1,15 +1,20 @@
-FROM python:3.10.4-bullseye
+FROM python:3.10.6-slim
+
+WORKDIR /opt/app
 
 ENV PYTHONDONTWRITEBYTECODE 1
 ENV PYTHONUNBUFFERED 1
 
-WORKDIR /usr/src/app
+COPY requirements.txt requirements.txt
 
-COPY ./requirements.txt .
-RUN pip install --upgrade pip && \
-    pip install --no-cache-dir -r requirements.txt
+RUN  apt-get update \
+     && apt-get install -y gcc \
+     && pip install --upgrade pip \
+     && pip install -r requirements.txt
 
-ADD migrations ./migrations
-COPY migrator.py .
+COPY . .
+COPY core/docker.env core/.env
 
-CMD ["python", "migrator.py"]
+
+ENTRYPOINT ["python", "main.py"]
+
