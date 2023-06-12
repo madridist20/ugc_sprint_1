@@ -2,18 +2,26 @@ import time
 import datetime
 import random
 import multiprocessing
-from clickhouse_driver import Client
+import vertica_python
 from tqdm import tqdm
 
-# Connect to ClickHouse server
-client = Client('localhost')
-
+# Connection information
+connection_info = {
+    'host': '127.0.0.1',
+    'port': 5433,
+    'user': 'dbadmin',
+    'password': '',
+    'database': 'docker',
+    'autocommit': True,
+}
 
 # Function to insert random data into the table
 def insert_data(total_rows):
-    insert_query = 'INSERT INTO user_progress (user_id, movie_id, progress, timestamp) VALUES'
-    data = [(random.randint(1, 100), random.randint(1, 100), random.random(), datetime.datetime.now()) for _ in range(total_rows)]
-    client.execute(insert_query, data)
+    insert_query = 'INSERT INTO user_progress (user_id, movie_id, progress, timestamp) VALUES (%s, %s, %s, %s)'
+    with vertica_python.connect(**connection_info) as connection:
+        cursor = connection.cursor()
+        data = [(random.randint(1, 100), random.randint(1, 100), random.random(), datetime.datetime.now()) for _ in range(total_rows)]
+        cursor.executemany(insert_query, data)
 
 # Function to simulate background load with concurrent write operations
 def background_load(total_rows, interval, event):
@@ -21,10 +29,13 @@ def background_load(total_rows, interval, event):
         insert_data(total_rows)
         time.sleep(interval)
 
-# Function to read all data from the table
-def read_data():
-    select_query = 'SELECT user_id, movie_id, progress FROM user_progress WHERE user_id = 1'
-    result = client.execute(select_query)
+# Function to read data from the table in batches
+def read_data_batch(batch_size):
+    select_query = 'SELECT user_id, movie_id, progress FROM user_progress WHERE user_id = 1 LIMIT %s'
+    with vertica_python.connect(**connection_info) as connection:
+        cursor = connection.cursor()
+        cursor.execute(select_query, (batch_size,))
+        result = cursor.fetchall()
     return result
 
 if __name__ == '__main__':
@@ -58,16 +69,18 @@ if __name__ == '__main__':
     start_time = time.time()
     read_iterations = 10  # Number of read iterations
     read_intervals = read_iterations - 1  # Number of intervals (sleep time) between read iterations
+    batch_size = 1000  # Number of rows to read in each batch
+    total_rows_read = 0
     for i in tqdm(range(read_iterations), desc='Read Iterations', unit='iteration'):
-        result = read_data()
+        result = read_data_batch(batch_size)
+        total_rows_read += len(result)
         if i < read_intervals:
             time.sleep(interval)  # Wait for interval seconds between read iterations
     end_time = time.time()
 
-    total_rows_read = len(result) * read_iterations
     read_time = (end_time - start_time) - (interval * read_intervals)  # Exclude interval time from total time
     read_velocity = total_rows_read / read_time
     print(f'Read Velocity: {read_velocity:.2f} rows/s')
-
-    #
+    print(f'Total Rows Read: {total_rows_read}')
+    print(f'Total Time: {end_time - start_time:.2f} s')
 
