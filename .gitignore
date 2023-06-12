@@ -1,3 +1,20 @@
+# PyCharm
+.idea
+
+# venv
+*.env
+*.venv
+*.pem
+*.crt
+
+# OSX
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Thumbnails
+._*
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
@@ -27,6 +44,7 @@ share/python-wheels/
 *.egg
 MANIFEST
 
+
 # PyInstaller
 #  Usually these files are written by a python script from a template
 #  before PyInstaller builds the exe, so as to inject date/other infos into it.
@@ -40,7 +58,6 @@ pip-delete-this-directory.txt
 # Unit test / coverage reports
 htmlcov/
 .tox/
-.nox/
 .coverage
 .coverage.*
 .cache
@@ -51,6 +68,7 @@ coverage.xml
 .hypothesis/
 .pytest_cache/
 
+
 # Translations
 *.mo
 *.pot
@@ -58,9 +76,6 @@ coverage.xml
 # Django stuff:
 *.log
 local_settings.py
-db.sqlite3
-db.sqlite
-db.sqlite3-journal
 
 # Flask stuff:
 instance/
@@ -112,10 +127,6 @@ env.bak/
 venv.bak/
 
 
-# Spyder project settings
-.spyderproject
-.spyproject
-
 # Rope project settings
 .ropeproject
 
@@ -133,3 +144,8 @@ dmypy.json
 .python-version
 
 event_writer_api/src/core/docker.env
+=======
+# Project
+/auth_api/auth_api.db
+/CA.pem
+/benchmark/volumes
